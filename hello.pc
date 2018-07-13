@@ -1,0 +1,143 @@
+/*
+** standard include files for Pro*C application
+*/
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <sqlca.h>
+#include <sqlda.h>
+#include <sqlcpr.h>
+#include <hello.h>
+/* #include <time.h> */
+
+#define NAME_LEN 30
+#define DESC_LEN 256
+#define ERR_LEN 512
+
+VARCHAR username[NAME_LEN];
+VARCHAR password[NAME_LEN];
+VARCHAR database[NAME_LEN];
+
+/*
+** host variables to hold results of query
+*/
+int     parameter_num;
+VARCHAR parameter_name[NAME_LEN];
+VARCHAR long_description_1[DESC_LEN];
+int     rn;
+
+/*
+** indicator variables used to determine null-ness
+*/
+short parameter_num_ind;
+short parameter_name_ind;
+short long_description_1_ind;
+short rn_ind;
+
+/*
+** standard Pro*C error handler function
+*/
+void sql_error(char *msg)
+{
+  char err_msg[ERR_LEN];
+  size_t buf_len, msg_len;
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE;
+
+  printf("\n");
+
+  if (msg)
+  {
+    printf("%s\n", msg);
+  }
+
+  buf_len = sizeof (err_msg);
+  sqlglm(err_msg, &buf_len, &msg_len);
+  printf("%.*s", msg_len, err_msg);
+
+  EXEC SQL ROLLBACK RELEASE;
+
+  exit(EXIT_FAILURE);
+}
+
+void printDate() 
+{
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+
+    printf("now: %d-%d-%d %d:%d:%d\n", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+}
+
+void getSystemParameters()
+{
+  /*
+  ** setup username, password and database (ezconnect format)
+  */
+  strncpy((char *) username.arr, "devel730", NAME_LEN);
+  username.len = (unsigned short) strlen((char *) username.arr);
+
+  strncpy((char *) password.arr, "devel730", NAME_LEN);
+  password.len = (unsigned short) strlen((char *) password.arr);
+
+  strncpy((char *) database.arr, "SOLAR:1521/SOLAR10", NAME_LEN);
+  database.len = (unsigned short) strlen((char *) database.arr);
+
+  /*
+  ** register the error handler function
+  */
+  EXEC SQL WHENEVER SQLERROR DO sql_error("ORACLE error: \n");
+
+  /*
+  ** attempt to connect to the database
+  */
+  EXEC SQL CONNECT :username IDENTIFIED BY :password USING :database;
+
+  /*
+  ** indicate we want to break out of the loop when we get a no data
+  ** found message (i.e. at end of fetch)
+  */
+  EXEC SQL WHENEVER NOT FOUND DO break;
+
+  /*
+  ** declare and open cursor 
+  ** to get "top 3" in system_parameter
+  */
+  EXEC SQL DECLARE system_parameter_cursor CURSOR FOR
+		select   *
+			from
+				(
+					select	parameter_num,
+									parameter_name,
+									long_description_1,
+									rownum rn
+					from    system_parameter
+				)
+		where rn <= 3;
+
+  EXEC SQL OPEN system_parameter_cursor;
+
+  /*
+  ** loop through cursor fetching results
+  ** and printing as we go
+  */
+  for (;;)
+  {
+    EXEC SQL FETCH system_parameter_cursor
+      INTO :parameter_num:parameter_num_ind,
+           :parameter_name:parameter_name_ind,
+           :long_description_1:long_description_1_ind,
+           :rn:rn_ind;
+
+    parameter_name.arr[parameter_name.len] = '\0';
+    long_description_1.arr[long_description_1.len] = '\0';
+
+    printf("%d, %s %s, %d\n", parameter_num, parameter_name.arr, long_description_1.arr, rn);
+  }
+
+  /*
+  ** clean-up and exit
+  */
+  EXEC SQL CLOSE system_parameter_cursor;
+
+  EXEC SQL COMMIT RELEASE;
+} 

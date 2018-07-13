@@ -35,6 +35,8 @@
 
 CC=/usr/bin/gcc
 cc=/usr/bin/gcc
+# CC=/opt/oracle/developerstudio12.6/bin/cc
+# cc=/opt/oracle/developerstudio12.6/bin/cc
 
 # InstantClient Directories.
 ICSDKHOME=$(ORACLE_HOME)/sdk/
@@ -45,24 +47,24 @@ REMOVE=rm -rf
 CLNCACHE=cleancache
 CACHEDIR=SunWS_cachea
 MAKE=make
-MAKEFILE=demo_proc_ic.mk
-PROCDEMO=procdemo
+MAKEFILE=Makefile
+PROCDEMO=hello-world
 
 PROC=$(ICSDKHOME)proc
 SO_EXT=.so
 I_SYM=-I
 
-CCINCLUDES= $(I_SYM)$(ICSDKHOME)include
+CCINCLUDES= $(I_SYM). $(I_SYM)$(ICSDKHOME)include $(I_SYM)/usr/lib/gcc/x86_64-redhat-linux/4.8.5/include
 
 # Pre-compiler Flags.
 PRECOMP_INCLUDE=$(I_SYM). $(SYS_INCLUDE)
 PRECOMPPUBH=$(ICSDKHOME)include
-SYS_INCLUDE=sys_include=\($(PRECOMPPUBH),/usr/include,/usr/lib/gcc-lib/x86_64-redhat-linux/3.2.3/include,/usr/lib/gcc/x86_64-redhat-linux/4.1.1/include,/usr/lib64/gcc/x86_64-suse-linux/4.1.2/include,/usr/lib64/gcc/x86_64-suse-linux/4.3/include,/usr/lib/gcc/x86_64-redhat-linux/4.4.6/include,/usr/lib/gcc/x86_64-redhat-linux/4.8.5/include\)
+SYS_INCLUDE=sys_include=\($(PRECOMPPUBH),/usr/include,/usr/lib/gcc/x86_64-redhat-linux/4.8.5/include\)
 
 # Compiler Flags.
 OPTIMIZE=-O2
 LDPATHFLAG=-L
-SPFLAGS=-DLINUX -D_GNU_SOURCE -D_LARGEFILE64_SOURCE=1 -D_LARGEFILE_SOURCE=1 -DSLTS_ENABLE -DSLMXMX_ENABLE -D_REENTRANT -DNS_THREADS
+SPFLAGS=-DLINUX -D_LARGEFILE64_SOURCE=1 -D_LARGEFILE_SOURCE=1 -DSLTS_ENABLE -DSLMXMX_ENABLE -D_REENTRANT -DNS_THREADS
 CCFLAGS= -fPIC -DPRECOMP
 LDFLAGS=-g
 LPFLAGS=
@@ -71,7 +73,10 @@ CDEBUG=
 USRFLAGS=
 ICLIBPATH=$(LDPATHFLAG)$(ICLIBHOME)
 PFLAGS=$(CCINCLUDES) $(SPFLAGS) $(LPFLAGS)
-CFLAGS=$(GFLAG) $(OPTIMIZE) $(CDEBUG) $(CCFLAGS) $(PFLAGS) $(USRFLAGS)
+#CFLAGS=$(GFLAG) $(OPTIMIZE) $(CDEBUG) $(CCFLAGS) $(PFLAGS) $(USRFLAGS) -H
+CFLAGS=$(GFLAG) $(OPTIMIZE) $(CDEBUG) $(CCFLAGS) $(PFLAGS) $(USRFLAGS) -ansi
+#CFLAGS=$(GFLAG) $(OPTIMIZE) $(CDEBUG) $(CCFLAGS) $(PFLAGS) $(USRFLAGS) -H -include "/usr/include/time.h" 
+
 
 # Libraries.
 PROLDLIBS=$(LDCLIENTLIBS) $(THREADLIBS)
